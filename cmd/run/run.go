@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/mtoohey31/gh-foreach/api"
+	"github.com/mtoohey31/gh-foreach/helper"
 	"github.com/mtoohey31/gh-foreach/repo"
 
 	"github.com/spf13/cobra"
@@ -14,6 +15,7 @@ import (
 type runOpts struct {
 	Visibility   string
 	Affiliations []string
+	Languages    []string
 }
 
 // TODO: handle more than 30 responses, include flag for increasing the default of 30 to 100, I'll have to do something else for values beyond that, because the gh api won't handle more
@@ -27,7 +29,7 @@ func NewRunCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			validateOpts(opts)
 
-			repos := api.GetRepos(opts.Visibility, opts.Affiliations)
+			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages)
 
 			tmpDir := repo.CreateCopies(repos)
 
@@ -42,30 +44,22 @@ func NewRunCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.Visibility, "visibility", "v", "all", "Visibility of repo, one of all, public, or private, default all")
-	cmd.Flags().StringArrayVarP(&opts.Affiliations, "affiliation", "a", []string{"owner"}, "Affiliation to repo, comma separated list of owner, collaborator, organization_member, default owner")
+	cmd.Flags().StringVarP(&opts.Visibility, "visibility", "v", "all", "filter by repo visibility, one of all, public, or private, default all")
+	cmd.Flags().StringArrayVarP(&opts.Affiliations, "affiliation", "a", []string{"owner"}, "filter by affiliation to repo, comma separated list of owner, collaborator, organization_member, default owner")
+	cmd.Flags().StringArrayVarP(&opts.Languages, "languages", "l", nil, "filter by repos containing one or more of the comma separated list of languages, default nil")
 
 	return cmd
 }
 
 func validateOpts(opts runOpts) {
-	if !containsString([]string{"all", "public", "private"}, opts.Visibility) {
+	if !helper.ContainsString([]string{"all", "public", "private"}, opts.Visibility) {
 		log.Fatalln("Invalid visibility: ", opts.Visibility)
 	}
 	validAffiliations := []string{"owner", "collaborator", "organization_member"}
 	for _, v := range opts.Affiliations {
-		if !containsString(validAffiliations, v) {
+		if !helper.ContainsString(validAffiliations, v) {
 			log.Fatalln("Invalid affiliation: ", v)
 		}
 	}
 
-}
-
-func containsString(arr []string, item string) bool {
-	for _, v := range arr {
-		if v == item {
-			return true
-		}
-	}
-	return false
 }
