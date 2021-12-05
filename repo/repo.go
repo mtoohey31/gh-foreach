@@ -1,0 +1,66 @@
+package repo
+
+import (
+	"errors"
+	"io/ioutil"
+	"log"
+	"os"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/mtoohey31/gh-foreach/api"
+	"github.com/otiai10/copy"
+)
+
+func CreateCopies(repos []api.Repo) string {
+	tmpDir, err := ioutil.TempDir("/tmp", "gh-foreach")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, repo := range repos {
+		ensureUpToDate(repo)
+		err := copy.Copy(repo.CacheDir(), repo.TmpDir(tmpDir))
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	return tmpDir
+}
+
+func ensureUpToDate(repo api.Repo) {
+	if exists(repo) {
+		pull(repo)
+	} else {
+		clone(repo)
+	}
+}
+
+func exists(repo api.Repo) bool {
+	_, err := os.Stat(repo.CacheDir())
+	return err == nil
+}
+
+func clone(repo api.Repo) {
+	_, err := git.PlainClone(repo.CacheDir(), false, &git.CloneOptions{
+		URL:      repo.Clone_URL,
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func pull(repo api.Repo) {
+	r, err := git.PlainOpen(repo.CacheDir())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = w.Pull(&git.PullOptions{})
+	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+		log.Fatalln(err)
+	}
+}
