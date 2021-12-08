@@ -40,6 +40,7 @@ require (
 	github.com/cli/shurcooL-graphql v0.0.1 // indirect
 	github.com/henvic/httpretty v0.0.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/mtoohey31/which v0.0.0-20211208193019-eb36883e0c49
 	github.com/otiai10/copy v1.7.0
 	github.com/spf13/cobra v1.2.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
