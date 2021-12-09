@@ -20,6 +20,7 @@ type runOpts struct {
 	Languages    []string
 	Shell        string
 	Number       int
+	Interactive  bool
 }
 
 func NewRunCmd() *cobra.Command {
@@ -36,21 +37,32 @@ func NewRunCmd() *cobra.Command {
 
 			tmpDir := helper.CreateTmpDir()
 
-			var wg sync.WaitGroup
-			wg.Add(len(repos))
-
-			for i, r := range repos {
-				go func(i int, r api.Repo) {
-					defer wg.Done()
+			if opts.Interactive {
+				for _, r := range repos {
 					repo.CreateCopy(r, tmpDir)
 
-					cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")}, Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
-					cmd.Start()
-					cmd.Wait()
-				}(i, r)
-			}
+					cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")},
+						Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
+					cmd.Run()
+				}
+			} else {
+				var wg sync.WaitGroup
+				wg.Add(len(repos))
 
-			wg.Wait()
+				for _, r := range repos {
+					go func(r api.Repo) {
+						defer wg.Done()
+
+						repo.CreateCopy(r, tmpDir)
+
+						cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")},
+							Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+						cmd.Run()
+					}(r)
+				}
+
+				wg.Wait()
+			}
 		},
 	}
 
@@ -60,6 +72,7 @@ func NewRunCmd() *cobra.Command {
 	cmd.Flags().StringArrayVarP(&opts.Languages, "languages", "l", nil, "filter by repos containing one or more of the comma separated list of languages")
 	cmd.Flags().StringVarP(&opts.Shell, "shell", "s", os.Getenv("SHELL"), "shell to run command with")
 	cmd.Flags().IntVarP(&opts.Number, "number", "n", 30, "max number of repositories operate on")
+	cmd.Flags().BoolVarP(&opts.Interactive, "interactive", "i", false, "run commands sequentially and interactively")
 
 	return cmd
 }
