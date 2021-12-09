@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -21,6 +22,8 @@ type runOpts struct {
 	Shell        string
 	Number       int
 	Interactive  bool
+	RegexString  string
+	Regex        *regexp.Regexp
 }
 
 func NewRunCmd() *cobra.Command {
@@ -33,7 +36,7 @@ func NewRunCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			validateOpts(&opts)
 
-			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages, opts.Number)
+			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages, opts.Number, *opts.Regex)
 
 			tmpDir := helper.CreateTmpDir()
 
@@ -84,6 +87,7 @@ func NewRunCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.Shell, "shell", "s", os.Getenv("SHELL"), "shell to run command with")
 	cmd.Flags().IntVarP(&opts.Number, "number", "n", 30, "max number of repositories operate on")
 	cmd.Flags().BoolVarP(&opts.Interactive, "interactive", "i", false, "run commands sequentially and interactively")
+	cmd.Flags().StringVarP(&opts.RegexString, "regex", "r", ".*", "filter via regex match on repo name")
 
 	return cmd
 }
@@ -110,5 +114,9 @@ func validateOpts(opts *runOpts) {
 	} else if opts.Number > 100 {
 		// TODO: support numbers greater than 100 by making multiple API calls
 		log.Fatalln("Number must be at most 100.")
+	}
+	opts.Regex, err = regexp.Compile(opts.RegexString)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -30,7 +31,7 @@ func (repo Repo) TmpDir(tmpRoot string) string {
 	return path.Join(tmpRoot, repo.Owner.Login, repo.Name)
 }
 
-func GetRepos(visibility string, affiliations []string, languages []string, number int) []Repo {
+func GetRepos(visibility string, affiliations []string, languages []string, number int, regex regexp.Regexp) []Repo {
 	client, err := gh.RESTClient(nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -50,14 +51,10 @@ func GetRepos(visibility string, affiliations []string, languages []string, numb
 		log.Fatalln(err)
 	}
 
-	if languages == nil {
-		return response
-	}
-
 	filteredResponse := []Repo{}
 
 	for _, repo := range response {
-		if repo.containsSomeLanguage(client, languages) {
+		if regex.MatchString(repo.Name) && (languages == nil || repo.containsSomeLanguage(client, languages)) {
 			filteredResponse = append(filteredResponse, repo)
 		}
 	}
