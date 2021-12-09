@@ -38,8 +38,19 @@ func NewRunCmd() *cobra.Command {
 			tmpDir := helper.CreateTmpDir()
 
 			if opts.Interactive {
-				for _, r := range repos {
-					repo.CreateCopy(r, tmpDir)
+				wgs := make([]sync.WaitGroup, len(repos))
+
+				for i, r := range repos {
+					wgs[i].Add(1)
+
+					go func(i int, r api.Repo) {
+						defer wgs[i].Done()
+
+						repo.CreateCopy(r, tmpDir)
+					}(i, r)
+				}
+				for i, r := range repos {
+					wgs[i].Wait()
 
 					cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")},
 						Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
