@@ -2,7 +2,6 @@ package repo
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,20 +10,12 @@ import (
 	"github.com/otiai10/copy"
 )
 
-func CreateCopies(repos []api.Repo) string {
-	tmpDir, err := ioutil.TempDir("/tmp", "gh-foreach")
+func CreateCopy(repo api.Repo, tmpDir string) {
+	ensureUpToDate(repo)
+	err := copy.Copy(repo.CacheDir(), repo.TmpDir(tmpDir))
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	for _, repo := range repos {
-		ensureUpToDate(repo)
-		err := copy.Copy(repo.CacheDir(), repo.TmpDir(tmpDir))
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-	return tmpDir
 }
 
 func ensureUpToDate(repo api.Repo) {

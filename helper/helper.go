@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -21,4 +22,12 @@ func ContainsString(arr []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func CreateTmpDir() string {
+	tmpDir, err := ioutil.TempDir("/tmp", "gh-foreach")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return tmpDir
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/mtoohey31/gh-foreach/api"
 	"github.com/mtoohey31/gh-foreach/helper"
@@ -18,9 +19,9 @@ type runOpts struct {
 	Affiliations []string
 	Languages    []string
 	Shell        string
+	Number       int
 }
 
-// TODO: handle more than 30 responses, include flag for increasing the default of 30 to 100, I'll have to do something else for values beyond that, because the gh api won't handle more
 func NewRunCmd() *cobra.Command {
 	opts := runOpts{}
 
@@ -31,31 +32,34 @@ func NewRunCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			validateOpts(&opts)
 
-			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages)
+			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages, opts.Number)
 
-			tmpDir := repo.CreateCopies(repos)
+			tmpDir := helper.CreateTmpDir()
 
-			cmds := make([]exec.Cmd, len(repos))
+			var wg sync.WaitGroup
+			wg.Add(len(repos))
 
-			for i, repo := range repos {
-				cmds[i] = exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")}, Dir: repo.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+			for i, r := range repos {
+				go func(i int, r api.Repo) {
+					defer wg.Done()
+					repo.CreateCopy(r, tmpDir)
 
-				err := cmds[i].Start()
-				if err != nil {
-					log.Println(err)
-				}
+					cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")}, Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+					cmd.Start()
+					cmd.Wait()
+				}(i, r)
 			}
 
-			for _, cmd := range cmds {
-				cmd.Wait()
-			}
+			wg.Wait()
 		},
 	}
 
+	// TODO: add user/organization options
 	cmd.Flags().StringVarP(&opts.Visibility, "visibility", "v", "all", "filter by repo visibility, one of all, public, or private")
 	cmd.Flags().StringArrayVarP(&opts.Affiliations, "affiliation", "a", []string{"owner"}, "filter by affiliation to repo, comma separated list of owner, collaborator, organization_member")
 	cmd.Flags().StringArrayVarP(&opts.Languages, "languages", "l", nil, "filter by repos containing one or more of the comma separated list of languages")
 	cmd.Flags().StringVarP(&opts.Shell, "shell", "s", os.Getenv("SHELL"), "shell to run command with")
+	cmd.Flags().IntVarP(&opts.Number, "number", "n", 30, "max number of repositories operate on")
 
 	return cmd
 }
@@ -76,5 +80,11 @@ func validateOpts(opts *runOpts) {
 	}
 	if path != opts.Shell {
 		opts.Shell = path
+	}
+	if opts.Number == 0 {
+		log.Fatalln("Number must be non-zero.")
+	} else if opts.Number > 100 {
+		// TODO: support numbers greater than 100 by making multiple API calls
+		log.Fatalln("Number must be at most 100.")
 	}
 }

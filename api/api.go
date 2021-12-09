@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/cli/go-gh"
@@ -29,7 +30,7 @@ func (repo Repo) TmpDir(tmpRoot string) string {
 	return path.Join(tmpRoot, repo.Owner.Login, repo.Name)
 }
 
-func GetRepos(visibility string, affiliations []string, languages []string) []Repo {
+func GetRepos(visibility string, affiliations []string, languages []string, number int) []Repo {
 	client, err := gh.RESTClient(nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -39,10 +40,12 @@ func GetRepos(visibility string, affiliations []string, languages []string) []Re
 
 	values.Set("visibility", visibility)
 	values.Set("affiliation", strings.Join(affiliations, ","))
+	values.Set("per_page", strconv.Itoa(number))
 
 	response := []Repo{}
 
 	err = client.Get("user/repos?"+values.Encode(), &response)
+
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -59,6 +62,7 @@ func GetRepos(visibility string, affiliations []string, languages []string) []Re
 		}
 	}
 
+	// TODO: handle interaction between language filtering and numbers
 	return filteredResponse
 }
 
