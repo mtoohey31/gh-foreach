@@ -26,6 +26,7 @@ type runOpts struct {
 	RegexString  string
 	Regex        *regexp.Regexp
 	NoConfirm    bool
+	Cleanup      bool
 }
 
 func NewRunCmd() *cobra.Command {
@@ -56,23 +57,48 @@ func NewRunCmd() *cobra.Command {
 			tmpDir := helper.CreateTmpDir()
 
 			if opts.Interactive {
-				wgs := make([]sync.WaitGroup, len(repos))
-
+				copyWgs := make([]sync.WaitGroup, len(repos))
+				var cleanupWgs []sync.WaitGroup
+				if opts.Cleanup {
+					cleanupWgs = make([]sync.WaitGroup, len(repos))
+				}
 				for i, r := range repos {
-					wgs[i].Add(1)
+					copyWgs[i].Add(1)
 
 					go func(i int, r api.Repo) {
-						defer wgs[i].Done()
+						defer copyWgs[i].Done()
 
 						repo.CreateCopy(r, tmpDir)
 					}(i, r)
 				}
 				for i, r := range repos {
-					wgs[i].Wait()
+					copyWgs[i].Wait()
 
 					cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")},
 						Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
 					cmd.Run()
+
+					if opts.Cleanup {
+						cleanupWgs[i].Add(1)
+
+						go func(i int, r api.Repo) {
+							defer cleanupWgs[i].Done()
+
+							err := os.RemoveAll(r.TmpDir(tmpDir))
+							if err != nil {
+								log.Fatalln(err)
+							}
+						}(i, r)
+					}
+				}
+				if opts.Cleanup {
+					for i := range cleanupWgs {
+						cleanupWgs[i].Wait()
+					}
+					err := os.RemoveAll(tmpDir)
+					if err != nil {
+						log.Fatalln(err)
+					}
 				}
 			} else {
 				var wg sync.WaitGroup
@@ -87,10 +113,18 @@ func NewRunCmd() *cobra.Command {
 						cmd := exec.Cmd{Path: opts.Shell, Args: []string{opts.Shell, "-c", strings.Join(args, " ")},
 							Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
 						cmd.Run()
+
+						if opts.Cleanup {
+							os.RemoveAll(r.TmpDir(tmpDir))
+						}
 					}(r)
 				}
 
 				wg.Wait()
+
+				if opts.Cleanup {
+					os.RemoveAll(tmpDir)
+				}
 			}
 		},
 	}
@@ -104,6 +138,7 @@ func NewRunCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.Interactive, "interactive", "i", false, "run commands sequentially and interactively")
 	cmd.Flags().StringVarP(&opts.RegexString, "regex", "r", ".*", "filter via regex match on repo name")
 	cmd.Flags().BoolVarP(&opts.NoConfirm, "no-confirm", "y", false, "don't ask for confirmation")
+	cmd.Flags().BoolVarP(&opts.Cleanup, "cleanup", "c", false, "remove temporary ydirectory after running")
 
 	return cmd
 }
