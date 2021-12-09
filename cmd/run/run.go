@@ -1,6 +1,7 @@
 package run
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -24,6 +25,7 @@ type runOpts struct {
 	Interactive  bool
 	RegexString  string
 	Regex        *regexp.Regexp
+	NoConfirm    bool
 }
 
 func NewRunCmd() *cobra.Command {
@@ -37,6 +39,19 @@ func NewRunCmd() *cobra.Command {
 			validateOpts(&opts)
 
 			repos := api.GetRepos(opts.Visibility, opts.Affiliations, opts.Languages, opts.Number, *opts.Regex)
+
+			if !opts.NoConfirm {
+				names := make([]string, len(repos))
+				for i, repo := range repos {
+					names[i] = fmt.Sprintf("%s/%s", repo.Owner.Login, repo.Name)
+				}
+				fmt.Printf("Found:\n%s\nContinue? [Y/n] ", strings.Join(names, "\n"))
+				var userResponse string
+				fmt.Scanln(&userResponse)
+				if !helper.ContainsString([]string{"", "y", "yes"}, strings.ToLower(userResponse)) {
+					log.Fatalf("User cancelled with input %s\n", userResponse)
+				}
+			}
 
 			tmpDir := helper.CreateTmpDir()
 
@@ -88,6 +103,7 @@ func NewRunCmd() *cobra.Command {
 	cmd.Flags().IntVarP(&opts.Number, "number", "n", 30, "max number of repositories operate on")
 	cmd.Flags().BoolVarP(&opts.Interactive, "interactive", "i", false, "run commands sequentially and interactively")
 	cmd.Flags().StringVarP(&opts.RegexString, "regex", "r", ".*", "filter via regex match on repo name")
+	cmd.Flags().BoolVarP(&opts.NoConfirm, "no-confirm", "y", false, "don't ask for confirmation")
 
 	return cmd
 }
