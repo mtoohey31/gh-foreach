@@ -3,6 +3,7 @@ module github.com/mtoohey31/gh-foreach
 go 1.17
 
 require (
+	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/cli/go-gh v0.0.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/mtoohey31/which v0.0.0-20211209002701-ec52b0a18f71
