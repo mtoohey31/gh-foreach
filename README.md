@@ -4,6 +4,8 @@ Execute commands across multiple GitHub repositories. Currently a WIP.
 
 ## Usage
 
+Note: the minimum required version of the GitHub CLI (`gh`) is `v2.3.0`.
+
 ```bash
 gh extension install mtoohey31/gh-foreach
 gh foreach --help
