@@ -9,11 +9,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mtoohey31/gh-foreach/api"
-	"github.com/mtoohey31/gh-foreach/helper"
-	"github.com/mtoohey31/gh-foreach/repo"
-	"github.com/mtoohey31/which"
 	"github.com/spf13/cobra"
+	"mtoohey.com/gh-foreach/api"
+	"mtoohey.com/gh-foreach/helper"
+	"mtoohey.com/gh-foreach/repo"
+	"mtoohey.com/which"
 )
 
 type runOpts struct {

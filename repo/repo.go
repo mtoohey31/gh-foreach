@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/mtoohey31/gh-foreach/api"
 	"github.com/otiai10/copy"
+	"mtoohey.com/gh-foreach/api"
 )
 
 func CreateCopy(repo api.Repo, tmpDir string) {

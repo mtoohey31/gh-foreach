@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/mtoohey31/gh-foreach/helper"
+	"mtoohey.com/gh-foreach/helper"
 
 	"github.com/spf13/cobra"
 

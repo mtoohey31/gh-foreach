@@ -10,7 +10,7 @@ import (
 
 	"github.com/cli/go-gh"
 	"github.com/cli/go-gh/pkg/api"
-	"github.com/mtoohey31/gh-foreach/helper"
+	"mtoohey.com/gh-foreach/helper"
 )
 
 type Repo struct {

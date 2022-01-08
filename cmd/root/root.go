@@ -1,9 +1,9 @@
 package root
 
 import (
-	"github.com/mtoohey31/gh-foreach/cmd/clean"
-	"github.com/mtoohey31/gh-foreach/cmd/run"
 	"github.com/spf13/cobra"
+	"mtoohey.com/gh-foreach/cmd/clean"
+	"mtoohey.com/gh-foreach/cmd/run"
 )
 
 type Repo struct {
@@ -19,8 +19,7 @@ func NewCmdRoot() *cobra.Command {
 		// Long:  ``,
 	}
 
-	cmd.AddCommand(run.NewRunCmd())
-	cmd.AddCommand(clean.NewCleanCmd())
+	cmd.AddCommand(run.NewRunCmd(), clean.NewCleanCmd())
 
 	return cmd
 }
