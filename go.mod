@@ -3,10 +3,10 @@ module mtoohey.com/gh-foreach
 go 1.17
 
 require (
+	github.com/alecthomas/kong v0.4.0
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/cli/go-gh v0.0.1
 	github.com/go-git/go-git/v5 v5.4.2
-	mtoohey.com/which v0.0.0-20220108042408-98c2014f44b6
 )
 
 require (
@@ -21,21 +21,20 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e // indirect
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/cli/shurcooL-graphql v0.0.1 // indirect
 	github.com/henvic/httpretty v0.0.6 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/otiai10/copy v1.7.0
-	github.com/spf13/cobra v1.2.1
-	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
