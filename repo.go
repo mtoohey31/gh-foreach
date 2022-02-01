@@ -9,30 +9,30 @@ import (
 	"github.com/otiai10/copy"
 )
 
-func createCopy(repo Repo, tmpDir string) {
-	ensureUpToDate(repo)
-	err := copy.Copy(repo.CacheDir(), repo.TmpDir(tmpDir))
+func createCopy(r repo, tmpDir string) {
+	ensureUpToDate(r)
+	err := copy.Copy(r.cacheDir(), r.tmpDir(tmpDir))
 	if err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func ensureUpToDate(repo Repo) {
-	if exists(repo) {
-		pull(repo)
+func ensureUpToDate(r repo) {
+	if exists(r) {
+		pull(r)
 	} else {
-		clone(repo)
+		clone(r)
 	}
 }
 
-func exists(repo Repo) bool {
-	_, err := os.Stat(repo.CacheDir())
+func exists(r repo) bool {
+	_, err := os.Stat(r.cacheDir())
 	return err == nil
 }
 
-func clone(repo Repo) {
-	_, err := git.PlainClone(repo.CacheDir(), false, &git.CloneOptions{
-		URL:      repo.Clone_URL,
+func clone(r repo) {
+	_, err := git.PlainClone(r.cacheDir(), false, &git.CloneOptions{
+		URL:      r.Clone_URL,
 		Progress: os.Stdout,
 	})
 	if err != nil {
@@ -40,12 +40,12 @@ func clone(repo Repo) {
 	}
 }
 
-func pull(repo Repo) {
-	r, err := git.PlainOpen(repo.CacheDir())
+func pull(r repo) {
+	gr, err := git.PlainOpen(r.cacheDir())
 	if err != nil {
 		log.Fatalln(err)
 	}
-	w, err := r.Worktree()
+	w, err := gr.Worktree()
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/cli/go-gh/pkg/api"
 )
 
-type Repo struct {
+type repo struct {
 	Name          string
 	Owner         struct{ Login string }
 	URL           string
@@ -20,17 +20,15 @@ type Repo struct {
 	Languages_URL string
 }
 
-type Languages map[string]int
-
-func (repo Repo) CacheDir() string {
-	return path.Join(GetCacheDir(), repo.Owner.Login, repo.Name)
+func (r repo) cacheDir() string {
+	return path.Join(getCacheDir(), r.Owner.Login, r.Name)
 }
 
-func (repo Repo) TmpDir(tmpRoot string) string {
-	return path.Join(tmpRoot, repo.Owner.Login, repo.Name)
+func (r repo) tmpDir(tmpRoot string) string {
+	return path.Join(tmpRoot, r.Owner.Login, r.Name)
 }
 
-func GetRepos(visibility string, affiliations []string, languages []string, number int, regex regexp.Regexp) []Repo {
+func getRepos(visibility string, affiliations []string, languages []string, number int, regex regexp.Regexp) []repo {
 	client, err := gh.RESTClient(nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -42,7 +40,7 @@ func GetRepos(visibility string, affiliations []string, languages []string, numb
 	values.Set("affiliation", strings.Join(affiliations, ","))
 	values.Set("per_page", strconv.Itoa(number))
 
-	response := []Repo{}
+	response := []repo{}
 
 	err = client.Get("user/repos?"+values.Encode(), &response)
 
@@ -51,11 +49,11 @@ func GetRepos(visibility string, affiliations []string, languages []string, numb
 	}
 
 	// TODO: keep making requests until this hits the desired amount
-	filteredResponse := []Repo{}
+	filteredResponse := []repo{}
 
-	for _, repo := range response {
-		if regex.MatchString(repo.Name) && (languages == nil || repo.containsSomeLanguage(client, languages)) {
-			filteredResponse = append(filteredResponse, repo)
+	for _, r := range response {
+		if regex.MatchString(r.Name) && (languages == nil || r.containsSomeLanguage(client, languages)) {
+			filteredResponse = append(filteredResponse, r)
 		}
 	}
 
@@ -63,10 +61,10 @@ func GetRepos(visibility string, affiliations []string, languages []string, numb
 	return filteredResponse
 }
 
-func (repo Repo) containsSomeLanguage(client api.RESTClient, languages []string) bool {
-	response := Languages{}
+func (r repo) containsSomeLanguage(client api.RESTClient, languages []string) bool {
+	response := map[string]int{}
 
-	err := client.Get(repo.Languages_URL, &response)
+	err := client.Get(r.Languages_URL, &response)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -78,7 +76,7 @@ func (repo Repo) containsSomeLanguage(client api.RESTClient, languages []string)
 	}
 
 	for language := range response {
-		if ContainsString(languages, strings.ToLower(language)) {
+		if containsString(languages, strings.ToLower(language)) {
 			return true
 		}
 	}

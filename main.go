@@ -8,8 +8,8 @@ import (
 )
 
 var cmd struct {
-	Clean Clean `cmd:"" help:"Remove cache."`
-	Run   Run   `cmd:"" help:"Execute a command."`
+	Clean clean `cmd:"" help:"Remove cache."`
+	Run   run   `cmd:"" help:"Execute a command."`
 }
 
 type regexpMapper bool
@@ -29,7 +29,6 @@ func (m regexpMapper) Decode(ctx *kong.DecodeContext, target reflect.Value) erro
 
 func main() {
 	ctx := kong.Parse(&cmd, kong.TypeMapper(reflect.TypeOf(&regexp.Regexp{}), regexpMapper(false)))
-	// err := ctx.Run()
-	err := ctx.Run(kong.TypeMapper(reflect.TypeOf(&regexp.Regexp{}), regexpMapper(false)))
+	err := ctx.Run()
 	ctx.FatalIfErrorf(err)
 }

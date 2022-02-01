@@ -14,12 +14,12 @@ import (
 	"github.com/c2h5oh/datasize"
 )
 
-type Clean struct {
+type clean struct {
 	TmpDirs bool `help:"Clean temporary directories too." short:"t"`
 }
 
-func (c *Clean) Run(ctx *kong.Context) error {
-	cacheDir := GetCacheDir()
+func (c *clean) Run(ctx *kong.Context) error {
+	cacheDir := getCacheDir()
 	_, err := os.Stat(cacheDir)
 
 	var size int64 = 0

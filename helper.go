@@ -7,7 +7,7 @@ import (
 	"path"
 )
 
-func GetCacheDir() string {
+func getCacheDir() string {
 	dir, err := os.UserCacheDir()
 	if err != nil {
 		log.Fatalln(err)
@@ -15,7 +15,7 @@ func GetCacheDir() string {
 	return path.Join(dir, "gh-foreach")
 }
 
-func ContainsString(arr []string, item string) bool {
+func containsString(arr []string, item string) bool {
 	for _, v := range arr {
 		if v == item {
 			return true
@@ -24,7 +24,7 @@ func ContainsString(arr []string, item string) bool {
 	return false
 }
 
-func CreateTmpDir() string {
+func createTmpDir() string {
 	tmpDir, err := ioutil.TempDir("/tmp", "gh-foreach")
 	if err != nil {
 		log.Fatalln(err)

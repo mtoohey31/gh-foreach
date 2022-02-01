@@ -12,7 +12,7 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-type Run struct {
+type run struct {
 	Visibility   string         `short:"v" enum:"all,public,private" default:"all" help:"Filter by repo visibility."`
 	Affiliations []string       `short:"a" enum:"owner,collaborator,organization_member" default:"owner" help:"Filter by affiliation to repo."`
 	Languages    []string       `short:"l" help:"Filter by repos containing one or more of the provided languages."`
@@ -25,23 +25,23 @@ type Run struct {
 	Command      []string       `arg:"" help:"The command to run."`
 }
 
-func (c *Run) Run(ctx *kong.Context) error {
-	repos := GetRepos(c.Visibility, c.Affiliations, c.Languages, c.Number, *c.Regex)
+func (c *run) Run(ctx *kong.Context) error {
+	repos := getRepos(c.Visibility, c.Affiliations, c.Languages, c.Number, *c.Regex)
 
 	if !c.NoConfirm {
 		names := make([]string, len(repos))
-		for i, repo := range repos {
-			names[i] = fmt.Sprintf("%s/%s", repo.Owner.Login, repo.Name)
+		for i, r := range repos {
+			names[i] = fmt.Sprintf("%s/%s", r.Owner.Login, r.Name)
 		}
 		fmt.Printf("Found:\n%s\nContinue? [Y/n] ", strings.Join(names, "\n"))
 		var userResponse string
 		fmt.Scanln(&userResponse)
-		if !ContainsString([]string{"", "y", "yes"}, strings.ToLower(userResponse)) {
+		if !containsString([]string{"", "y", "yes"}, strings.ToLower(userResponse)) {
 			log.Fatalf("User cancelled with input %s\n", userResponse)
 		}
 	}
 
-	tmpDir := CreateTmpDir()
+	tmpDir := createTmpDir()
 
 	if c.Interactive {
 		copyWgs := make([]sync.WaitGroup, len(repos))
@@ -52,7 +52,7 @@ func (c *Run) Run(ctx *kong.Context) error {
 		for i, r := range repos {
 			copyWgs[i].Add(1)
 
-			go func(i int, r Repo) {
+			go func(i int, r repo) {
 				defer copyWgs[i].Done()
 
 				createCopy(r, tmpDir)
@@ -62,16 +62,16 @@ func (c *Run) Run(ctx *kong.Context) error {
 			copyWgs[i].Wait()
 
 			cmd := exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
-				Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
+				Dir: r.tmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
 			cmd.Run()
 
 			if c.Cleanup {
 				cleanupWgs[i].Add(1)
 
-				go func(i int, r Repo) {
+				go func(i int, r repo) {
 					defer cleanupWgs[i].Done()
 
-					err := os.RemoveAll(r.TmpDir(tmpDir))
+					err := os.RemoveAll(r.tmpDir(tmpDir))
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -92,17 +92,17 @@ func (c *Run) Run(ctx *kong.Context) error {
 		wg.Add(len(repos))
 
 		for _, r := range repos {
-			go func(r Repo) {
+			go func(r repo) {
 				defer wg.Done()
 
 				createCopy(r, tmpDir)
 
 				cmd := exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
-					Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+					Dir: r.tmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
 				cmd.Run()
 
 				if c.Cleanup {
-					os.RemoveAll(r.TmpDir(tmpDir))
+					os.RemoveAll(r.tmpDir(tmpDir))
 				}
 			}(r)
 		}
