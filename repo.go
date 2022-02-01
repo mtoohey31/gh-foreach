@@ -1,4 +1,4 @@
-package repo
+package main
 
 import (
 	"errors"
@@ -7,10 +7,9 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/otiai10/copy"
-	"mtoohey.com/gh-foreach/api"
 )
 
-func CreateCopy(repo api.Repo, tmpDir string) {
+func createCopy(repo Repo, tmpDir string) {
 	ensureUpToDate(repo)
 	err := copy.Copy(repo.CacheDir(), repo.TmpDir(tmpDir))
 	if err != nil {
@@ -18,7 +17,7 @@ func CreateCopy(repo api.Repo, tmpDir string) {
 	}
 }
 
-func ensureUpToDate(repo api.Repo) {
+func ensureUpToDate(repo Repo) {
 	if exists(repo) {
 		pull(repo)
 	} else {
@@ -26,12 +25,12 @@ func ensureUpToDate(repo api.Repo) {
 	}
 }
 
-func exists(repo api.Repo) bool {
+func exists(repo Repo) bool {
 	_, err := os.Stat(repo.CacheDir())
 	return err == nil
 }
 
-func clone(repo api.Repo) {
+func clone(repo Repo) {
 	_, err := git.PlainClone(repo.CacheDir(), false, &git.CloneOptions{
 		URL:      repo.Clone_URL,
 		Progress: os.Stdout,
@@ -41,7 +40,7 @@ func clone(repo api.Repo) {
 	}
 }
 
-func pull(repo api.Repo) {
+func pull(repo Repo) {
 	r, err := git.PlainOpen(repo.CacheDir())
 	if err != nil {
 		log.Fatalln(err)

@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"mtoohey.com/gh-foreach/helper"
-
 	"github.com/alecthomas/kong"
 
 	"github.com/c2h5oh/datasize"
@@ -21,7 +19,7 @@ type Clean struct {
 }
 
 func (c *Clean) Run(ctx *kong.Context) error {
-	cacheDir := helper.GetCacheDir()
+	cacheDir := GetCacheDir()
 	_, err := os.Stat(cacheDir)
 
 	var size int64 = 0

@@ -7,12 +7,6 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-type Repo struct {
-	Name      string
-	URL       string
-	Clone_URL string
-}
-
 var cmd struct {
 	Clean Clean `cmd:"" help:"Remove cache."`
 	Run   Run   `cmd:"" help:"Execute a command."`

@@ -1,4 +1,4 @@
-package api
+package main
 
 import (
 	"log"
@@ -10,7 +10,6 @@ import (
 
 	"github.com/cli/go-gh"
 	"github.com/cli/go-gh/pkg/api"
-	"mtoohey.com/gh-foreach/helper"
 )
 
 type Repo struct {
@@ -24,7 +23,7 @@ type Repo struct {
 type Languages map[string]int
 
 func (repo Repo) CacheDir() string {
-	return path.Join(helper.GetCacheDir(), repo.Owner.Login, repo.Name)
+	return path.Join(GetCacheDir(), repo.Owner.Login, repo.Name)
 }
 
 func (repo Repo) TmpDir(tmpRoot string) string {
@@ -51,6 +50,7 @@ func GetRepos(visibility string, affiliations []string, languages []string, numb
 		log.Fatalln(err)
 	}
 
+	// TODO: keep making requests until this hits the desired amount
 	filteredResponse := []Repo{}
 
 	for _, repo := range response {
@@ -78,7 +78,7 @@ func (repo Repo) containsSomeLanguage(client api.RESTClient, languages []string)
 	}
 
 	for language := range response {
-		if helper.ContainsString(languages, strings.ToLower(language)) {
+		if ContainsString(languages, strings.ToLower(language)) {
 			return true
 		}
 	}

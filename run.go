@@ -10,9 +10,6 @@ import (
 	"sync"
 
 	"github.com/alecthomas/kong"
-	"mtoohey.com/gh-foreach/api"
-	"mtoohey.com/gh-foreach/helper"
-	"mtoohey.com/gh-foreach/repo"
 )
 
 type Run struct {
@@ -29,7 +26,7 @@ type Run struct {
 }
 
 func (c *Run) Run(ctx *kong.Context) error {
-	repos := api.GetRepos(c.Visibility, c.Affiliations, c.Languages, c.Number, *c.Regex)
+	repos := GetRepos(c.Visibility, c.Affiliations, c.Languages, c.Number, *c.Regex)
 
 	if !c.NoConfirm {
 		names := make([]string, len(repos))
@@ -39,12 +36,12 @@ func (c *Run) Run(ctx *kong.Context) error {
 		fmt.Printf("Found:\n%s\nContinue? [Y/n] ", strings.Join(names, "\n"))
 		var userResponse string
 		fmt.Scanln(&userResponse)
-		if !helper.ContainsString([]string{"", "y", "yes"}, strings.ToLower(userResponse)) {
+		if !ContainsString([]string{"", "y", "yes"}, strings.ToLower(userResponse)) {
 			log.Fatalf("User cancelled with input %s\n", userResponse)
 		}
 	}
 
-	tmpDir := helper.CreateTmpDir()
+	tmpDir := CreateTmpDir()
 
 	if c.Interactive {
 		copyWgs := make([]sync.WaitGroup, len(repos))
@@ -55,10 +52,10 @@ func (c *Run) Run(ctx *kong.Context) error {
 		for i, r := range repos {
 			copyWgs[i].Add(1)
 
-			go func(i int, r api.Repo) {
+			go func(i int, r Repo) {
 				defer copyWgs[i].Done()
 
-				repo.CreateCopy(r, tmpDir)
+				createCopy(r, tmpDir)
 			}(i, r)
 		}
 		for i, r := range repos {
@@ -71,7 +68,7 @@ func (c *Run) Run(ctx *kong.Context) error {
 			if c.Cleanup {
 				cleanupWgs[i].Add(1)
 
-				go func(i int, r api.Repo) {
+				go func(i int, r Repo) {
 					defer cleanupWgs[i].Done()
 
 					err := os.RemoveAll(r.TmpDir(tmpDir))
@@ -95,10 +92,10 @@ func (c *Run) Run(ctx *kong.Context) error {
 		wg.Add(len(repos))
 
 		for _, r := range repos {
-			go func(r api.Repo) {
+			go func(r Repo) {
 				defer wg.Done()
 
-				repo.CreateCopy(r, tmpDir)
+				createCopy(r, tmpDir)
 
 				cmd := exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
 					Dir: r.TmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
