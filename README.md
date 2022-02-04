@@ -16,4 +16,4 @@ gh foreach run --no-confirm -v public -r '^\w{3}\d{3}.*project$' 'cat README.md 
 gh foreach run -ci -l svelte 'pnpm install; fish'
 ```
 
-![demo](https://user-images.githubusercontent.com/36740602/145335345-03e00a82-168f-482e-9616-0a38c1c8649b.gif)
+![demo](https://user-images.githubusercontent.com/36740602/152471108-47cc7484-3f95-4da0-81e5-81b8fb35d1ea.gif)
