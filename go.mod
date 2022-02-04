@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/kong v0.4.0
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/cli/go-gh v0.0.1
+	github.com/fatih/color v1.13.0
 	github.com/go-git/go-git/v5 v5.4.2
 )
 
@@ -14,7 +15,6 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211112122917-428f8eabeeb3 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
