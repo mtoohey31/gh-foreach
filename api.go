@@ -65,7 +65,6 @@ func getRepos(visibility string, affiliations []string, languages []string, rege
 		}
 	}
 
-	// TODO: handle interaction between language filtering and numbers
 	return filteredResponse
 }
 
