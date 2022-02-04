@@ -33,7 +33,7 @@ func exists(r repo) bool {
 func clone(r repo) {
 	_, err := git.PlainClone(r.cacheDir(), false, &git.CloneOptions{
 		URL:      r.Clone_URL,
-		Progress: os.Stdout,
+		Progress: nil,
 	})
 	if err != nil {
 		log.Fatalln(err)
