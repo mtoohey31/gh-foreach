@@ -1,6 +1,6 @@
 # gh-foreach
 
-Execute commands across multiple GitHub repositories. Currently a WIP.
+Automatically clone and execute commands across multiple GitHub repositories.
 
 ## Usage
 
