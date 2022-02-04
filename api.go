@@ -18,6 +18,7 @@ type repo struct {
 	URL           string
 	Clone_URL     string
 	Languages_URL string
+	Page          string
 }
 
 func (r repo) cacheDir() string {
@@ -28,7 +29,7 @@ func (r repo) tmpDir(tmpRoot string) string {
 	return path.Join(tmpRoot, r.Owner.Login, r.Name)
 }
 
-func getRepos(visibility string, affiliations []string, languages []string, number int, regex regexp.Regexp) []repo {
+func getRepos(visibility string, affiliations []string, languages []string, regex regexp.Regexp) []repo {
 	client, err := gh.RESTClient(nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -38,22 +39,29 @@ func getRepos(visibility string, affiliations []string, languages []string, numb
 
 	values.Set("visibility", visibility)
 	values.Set("affiliation", strings.Join(affiliations, ","))
-	values.Set("per_page", strconv.Itoa(number))
+	values.Set("per_page", "100")
 
-	response := []repo{}
-
-	err = client.Get("user/repos?"+values.Encode(), &response)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// TODO: keep making requests until this hits the desired amount
 	filteredResponse := []repo{}
 
-	for _, r := range response {
-		if regex.MatchString(r.Name) && (languages == nil || r.containsSomeLanguage(client, languages)) {
-			filteredResponse = append(filteredResponse, r)
+	for i := 1; true; i++ {
+		response := []repo{}
+
+		values.Set("page", strconv.Itoa(i))
+
+		err = client.Get("user/repos?"+values.Encode(), &response)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if len(response) == 0 {
+			break
+		}
+
+		for _, r := range response {
+			if regex.MatchString(r.Name) && (languages == nil || r.containsSomeLanguage(client, languages)) {
+				filteredResponse = append(filteredResponse, r)
+			}
 		}
 	}
 

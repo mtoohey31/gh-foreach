@@ -17,7 +17,6 @@ type run struct {
 	Affiliations []string       `short:"a" enum:"owner,collaborator,organization_member" default:"owner" help:"Filter by affiliation to repo."`
 	Languages    []string       `short:"l" help:"Filter by repos containing one or more of the provided languages."`
 	Shell        string         `short:"s" env:"SHELL" help:"Shell to run command with."`
-	Number       int            `short:"n" default:"30" help:"Max number of repositories to operate on."`
 	Interactive  bool           `short:"i" help:"Run commands sequentially and interactively."`
 	Regex        *regexp.Regexp `short:"r" default:".*" help:"Filter via regex match on repo name."`
 	NoConfirm    bool           `short:"N" help:"Don't ask for confirmation."`
@@ -26,7 +25,7 @@ type run struct {
 }
 
 func (c *run) Run(ctx *kong.Context) error {
-	repos := getRepos(c.Visibility, c.Affiliations, c.Languages, c.Number, *c.Regex)
+	repos := getRepos(c.Visibility, c.Affiliations, c.Languages, *c.Regex)
 
 	if !c.NoConfirm {
 		names := make([]string, len(repos))
