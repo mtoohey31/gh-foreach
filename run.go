@@ -27,6 +27,7 @@ type run struct {
 	NoConfirm    bool           `short:"N" help:"Don't ask for confirmation."`
 	Cleanup      bool           `short:"c" help:"Remove temporary directory after running."`
 	Command      []string       `arg:"" help:"The command to run."`
+	Unlabelled   bool           `short:"u" help:"Don't display labels next to non-interactive output."`
 }
 
 // shamelessly yoinked from: https://github.com/docker/compose/blob/7c47673d4af41d79900e6c70bc1a3f9f17bdd387/pkg/utils/writer.go#L1-L62
@@ -141,11 +142,15 @@ func (c *run) Run(ctx *kong.Context) error {
 			}
 		}
 	} else {
-		maxNameLen := 0
+		var maxNameLen int
 
-		for _, r := range repos {
-			if len(r.Name) > maxNameLen {
-				maxNameLen = len(r.Name)
+		if !c.Unlabelled {
+			maxNameLen = 0
+
+			for _, r := range repos {
+				if len(r.Name) > maxNameLen {
+					maxNameLen = len(r.Name)
+				}
 			}
 		}
 
@@ -158,9 +163,15 @@ func (c *run) Run(ctx *kong.Context) error {
 
 				createCopy(r, tmpDir)
 
-				stdout, stderr := NewOutputPair(r.Name, maxNameLen, i)
-				cmd := exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
-					Dir: r.tmpDir(tmpDir), Stdout: stdout, Stderr: stderr}
+				var cmd exec.Cmd
+				if c.Unlabelled {
+					cmd = exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
+						Dir: r.tmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+				} else {
+					stdout, stderr := NewOutputPair(r.Name, maxNameLen, i)
+					cmd = exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
+						Dir: r.tmpDir(tmpDir), Stdout: stdout, Stderr: stderr}
+				}
 				cmd.Run()
 
 				if c.Cleanup {
