@@ -39,10 +39,10 @@ type repoOutput struct {
 	buffer     bytes.Buffer
 }
 
-func (o repoOutput) Write(b []byte) (n int, err error) {
+func (o *repoOutput) Write(b []byte) (n int, err error) {
 	n, err = o.buffer.Write(b)
 	if err != nil {
-		return n, err
+		return
 	}
 	for {
 		b = o.buffer.Bytes()
@@ -64,7 +64,34 @@ func (o repoOutput) Write(b []byte) (n int, err error) {
 			return n, err
 		}
 	}
-	return n, nil
+	return
+}
+
+func (o *repoOutput) Close() (err error) {
+	b := o.buffer.Bytes()
+	if len(b) == 0 {
+		return
+	}
+	_, err = color.New(o.color).Fprintf(o.out, "%s %s|", o.name,
+		strings.Repeat(" ", o.maxNameLen-len(o.name)))
+	if err != nil {
+		return
+	}
+	_, err = o.out.Write([]byte{' '})
+	if err != nil {
+		return
+	}
+	_, err = o.out.Write(b)
+	if err != nil {
+		return
+	}
+	if b[len(b)-1] != '\n' {
+		_, err = o.out.Write([]byte{'\n'})
+	}
+	if err != nil {
+		return
+	}
+	return
 }
 
 func NewOutputPair(name string, maxNameLen int, index int) (repoOutput, repoOutput) {
@@ -117,7 +144,10 @@ func (c *run) Run(ctx *kong.Context) error {
 
 			cmd := exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
 				Dir: r.tmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}
-			cmd.Run()
+			err := cmd.Run()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
 
 			if c.Cleanup {
 				cleanupWgs[i].Add(1)
@@ -167,12 +197,21 @@ func (c *run) Run(ctx *kong.Context) error {
 				if c.Unlabelled {
 					cmd = exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
 						Dir: r.tmpDir(tmpDir), Stdout: os.Stdout, Stderr: os.Stderr}
+					err := cmd.Run()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err)
+					}
 				} else {
 					stdout, stderr := NewOutputPair(r.Name, maxNameLen, i)
 					cmd = exec.Cmd{Path: c.Shell, Args: []string{c.Shell, "-c", strings.Join(c.Command, " ")},
-						Dir: r.tmpDir(tmpDir), Stdout: stdout, Stderr: stderr}
+						Dir: r.tmpDir(tmpDir), Stdout: &stdout, Stderr: &stderr}
+					err := cmd.Run()
+					stdout.Close()
+					stderr.Close()
+					if err != nil {
+						fmt.Fprintln(&stderr, err)
+					}
 				}
-				cmd.Run()
 
 				if c.Cleanup {
 					os.RemoveAll(r.tmpDir(tmpDir))
