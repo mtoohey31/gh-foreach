@@ -8,13 +8,11 @@ import (
 	"regexp"
 
 	"github.com/alecthomas/kong"
-	"github.com/willabides/kongplete"
 )
 
 var cmd struct {
-	Clean              clean                        `cmd:"" help:"Remove cache."`
-	Run                run                          `cmd:"" help:"Execute a command."`
-	InstallCompletions kongplete.InstallCompletions `cmd:"" help:"Install shell completions."`
+	Clean clean `cmd:"" help:"Remove cache."`
+	Run   run   `cmd:"" help:"Execute a command."`
 }
 
 type regexpMapper bool
@@ -36,7 +34,6 @@ func main() {
 	parser := kong.Must(&cmd,
 		kong.Description("Automatically clone and execute commands across multiple GitHub repositories."),
 		kong.TypeMapper(reflect.TypeOf(&regexp.Regexp{}), regexpMapper(false)))
-	kongplete.Complete(parser)
 	ctx, err := parser.Parse(os.Args[1:])
 	parser.FatalIfErrorf(err)
 	err = ctx.Run()
