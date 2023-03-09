@@ -12,7 +12,7 @@
             name = "gh-foreach";
             pname = name;
             src = ./.;
-            vendorSha256 = "WoiNTDnjituek7i7TSm6cN+z+cHtKeTA54IvbzUMB50=";
+            vendorSha256 = "DZDydQQGwwDyX0yGh/8AmR6aBzkJj3HbNP6JC5dPCaE=";
           };
 
           devShells.default = mkShell {
